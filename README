@@ -1,0 +1,94 @@
+
+               A   N   T      -      E   C   L   I   P   S   E
+
+
+  What is it?
+  -----------
+
+  Ant-Eclipse is a task for the Java build tool Ant generating Eclipse
+  projects to be just imported and used easily. Ant build scripts are used
+  as a central place for the configuration of sources and libraries which
+  the generated projects are based on.
+
+  Why?
+  ----
+
+  The most usual way to develop a software is to write, run and debug the
+  source code in an IDE. However, as long as the first source files are
+  compilable the software finds its way into a package and it must be
+  possible to compile it, run it and test it in other environments where
+  the IDE is not available. Build tools used for this job usually cannot
+  read the project files where IDEs store information about packages and
+  sometimes there are more IDEs used by developers. It seems obvious that
+  the build tool needs its own description of the package.
+
+  Keeping the package configuration on two places is more error-prone and
+  looking for errors caused by diffrerences in these configurations can cost
+  much time when the error occur first during the run-time of an application.
+
+  It is allways the better to keep the configuration on a single place and not
+  to maintain its copies on more places. If there are more tools used for the
+  development one of them should be chosen as the owner and provider of the
+  package configuration. The others have to base ther configuration on this
+  central one either by using it directly or by refreshing their one if the
+  central one changes.
+
+  Which tool is the best one for keeping the package configuration? It depends
+  on the package and the development process. The most important tool is
+  usually the one which automates compiling packaging and running tests
+  because it produces the final package to be delivered to end-users. This
+  automated production usually runs unattendedly reporting results from
+  processing the current source code base. The configuration of this tool can
+  be taken as the source for all the others.
+
+  Ant is the most favourite build tool for projects written in the Java
+  language. Eclipse with JDT is a state-of-the-art IDE for Java developers.
+  Unfortunately, Eclipse cannot use Ant build scripts to base configuration
+  of its projects on them. Ant can be run from the Eclipse IDE but the
+  configuration is kept separately.
+
+  Ant-Eclipse automates the task of creating an Eclipse project making the
+  developer to write an automated build script as the first thing and to
+  generate an Eclipse project from it whenever it changes. It keeps the
+  Eclipse project always up-to-date with the last changes in the build script.
+  This project refreshing is usually automated when more developers are
+  working on a software project. They have to synchronize regularly their
+  workspace with a central source code repository to integrate changes made
+  by the others. This usually involves:
+
+  * Synchronizing the source code with a central repository.
+  * Updating the binary dependencies (libraries) from a central depot.
+  * Generating resources (files) dependent on the environment (time and place
+    where it runs) like build numbers, package manifests and so on.
+
+  The regeneration of Eclipse projects fits exactly to the last phase of such
+  sychronizing process. This is the recommended usage of the Ant-Eclipse task.
+
+  A formerly existing Eclipse project will be overwritten if a new one is to
+  be generated. Files for an Eclipse project are not generated if they exist
+  and they are not older than the Ant build script (the Ant build script has
+  not been changed). This update can be forced, however.
+
+  The Latest Version
+  ------------------
+
+  Details of the latest version can be found on the Ant-Eclipse Project web
+  site http://ant-eclipse.sourceforge.net.
+
+  Documentation
+  -------------
+
+  Documentation is available in HTML format, in the file
+  manual/ant-eclipse.html.
+
+  Licensing
+  ---------
+
+  This software is licensed under the terms you may find in the file named
+  "LICENSE" in this directory.
+
+  Thanks for using Ant-Eclipse.
+
+                                                  Ferdinand Prantl
+                                           prantl@users.sourceforge.net
+                                        http://ant-eclipse.sourceforge.net
