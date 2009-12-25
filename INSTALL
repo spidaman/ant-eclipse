@@ -1,0 +1,10 @@
+1) Copy the file ant-eclipse-1.0-jvm1.2.jar to the directory "lib" within the
+Ant installation directory or put it into the CLASSPATH before running Ant.
+
+2) Declare the task in the Ant build script to process:
+
+<taskdef name="eclipse" classname="prantl.ant.eclipse.EclipseTask"
+  classpath="<path>/ant-eclipse-1.0-jvm1.2.jar" />
+
+The attribute "classpath" is necessary only if the task cannot be found in the
+CLASSPATH of the Ant process.

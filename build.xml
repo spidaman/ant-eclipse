@@ -1,0 +1,365 @@
+<?xml version="1.0"?>
+<!-- Copyright 2005-2006 Ferdinand Prantl <prantl@users.sourceforge.net> -->
+<!-- Copyright 2001-2004 The Apache Software Foundation -->
+<!-- All rights reserved. -->
+<!-- -->
+<!-- Licensed under the Apache License, Version 2.0 (the "License"); -->
+<!-- you may not use this file except in compliance with the License. -->
+<!-- You may obtain a copy of the License at -->
+<!-- -->
+<!-- http://www.apache.org/licenses/LICENSE-2.0 -->
+<!-- -->
+<!-- Unless required by applicable law or agreed to in writing, software -->
+<!-- distributed under the License is distributed on an "AS IS" BASIS, -->
+<!-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. -->
+<!-- See the License for the specific language governing permissions and -->
+<!-- limitations under the License. -->
+<!-- -->
+<!-- See http://ant-eclipse.sourceforge.net for the most recent version -->
+<!-- and more information. -->
+
+<!-- jdk.version is the target JVM version (1.2-5)
+     jdk.path points to the correct version if the default one differs
+     debug generates debug information (false|true) default is true
+     optimize optimizes the build (false|true) default is true -->
+
+<project name="ant-eclipse" default="package" basedir=".">
+
+  <!-- set default values to properties for low-level calls -->
+  <condition property="javac.fork" value="false">
+    <not><isset property="jdk.version" /></not>
+  </condition>
+  <condition property="javac.compiler" value="modern">
+    <not><isset property="jdk.version" /></not>
+  </condition>
+  <condition property="javac.executable" value="">
+    <not><isset property="jdk.version" /></not>
+  </condition>
+  <condition property="javac.source" value="1.4">
+    <not><isset property="jdk.version" /></not>
+  </condition>
+  <condition property="runtime" value="">
+    <not><isset property="${jdk.version}" /></not>
+  </condition>
+  <condition property="javadoc.source" value="1.4">
+    <not><isset property="jdk.version" /></not>
+  </condition>
+  <condition property="java.jvm" value="">
+    <not><isset property="jdk.version" /></not>
+  </condition>
+  <condition property="jcsc.home" value="C:/Tools32/Develop/JCSC">
+    <not><isset property="jcsc.home" /></not>
+  </condition>
+
+  <!-- set properties for low-level calls that differ for jvm versions -->
+  <condition property="javac.fork">
+    <isset property="jdk.version" />
+  </condition>
+  <condition property="javac.compiler" value="javac${jdk.version}">
+    <isset property="jdk.version" />
+  </condition>
+  <condition property="javac.source" value="${jdk.version}">
+    <isset property="jdk.version" />
+  </condition>
+  <condition property="jdk.path" value="C:/Java12">
+    <and><not><isset property="jdk.path" /></not>
+      <equals arg1="${jdk.version}" arg2="1.2" /></and>
+  </condition>
+  <condition property="jdk.path" value="C:/Java13">
+    <and><not><isset property="jdk.path" /></not>
+      <equals arg1="${jdk.version}" arg2="1.3" /></and>
+  </condition>
+  <condition property="jdk.path" value="C:/Java14">
+    <and><not><isset property="jdk.path" /></not>
+      <equals arg1="${jdk.version}" arg2="1.4" /></and>
+  </condition>
+  <condition property="jdk.path" value="C:/Java15">
+    <and><not><isset property="jdk.path" /></not>
+      <equals arg1="${jdk.version}" arg2="1.5" /></and>
+  </condition>
+  <condition property="javac.executable" value="${jdk.path}/bin/javac">
+    <isset property="jdk.path" />
+  </condition>
+  <condition property="javadoc.source" value="${jdk.version}">
+    <isset property="jdk.version" />
+  </condition>
+  <condition property="java.jvm" value="${jdk.path}/bin/java">
+    <isset property="jdk.path" />
+  </condition>
+  <condition property="instrument">
+    <not><equals arg1="${jdk.version}" arg2="1.2" /></not>
+  </condition>
+
+  <!-- set default and derived properties -->
+  <property name="version" value="1.0" />
+  <property name="debug" value="true" />
+  <property name="optimize" value="true" />
+  <property name="deprecation" value="true" />
+  <tstamp />
+
+  <!-- set working directories -->
+  <property name="src.dir" value="src" />
+  <property name="tst.dir" value="tst" />
+  <property name="bin.dir" value="bin" />
+  <property name="lib.dir" value="lib" />
+  <property name="doc.dir" value="doc" />
+  <property name="tmp.dir" value="tmp" />
+  <condition property="runtime.suffix" value="">
+    <not><isset property="jdk.version" /></not>
+  </condition>
+  <condition property="runtime.suffix" value="-jvm${jdk.version}">
+    <isset property="jdk.version" />
+  </condition>
+  <condition property="target.suffix" value="">
+    <not><isset property="jdk.version" /></not>
+  </condition>
+  <condition property="target.suffix" value="/${jdk.version}">
+    <isset property="jdk.version" />
+  </condition>
+
+  <!-- set classpath for compiling and testing -->
+  <property name="classpath" value="${bin.dir}" />
+
+  <!-- declare external tasks -->
+  <taskdef name="antdoc" classname="org.ed.pack.ant.AntDoc" />
+  <taskdef name="jcsc" classname="rj.tools.jcsc.ant.JCSCTask"/>
+  <taskdef classpath="cobertura.jar" resource="tasks.properties" />
+
+  <!-- This task fails if some of the mandatory properties are missing
+       or have invalid values. -->
+  <target name="check" description="Checks for the valid configuration.">
+    <!--condition property="property.missing" value="jdk.version">
+      <not><isset property="jdk.version" /></not>
+    </condition>
+    <fail if="property.missing" message="The property ${property.missing} was not set."/-->
+    <condition property="property.invalid" value="jdk.version">
+      <not><or><not><isset property="jdk.version" /></not>
+        <equals arg1="${jdk.version}" arg2="1.2" />
+        <equals arg1="${jdk.version}" arg2="1.3" />
+        <equals arg1="${jdk.version}" arg2="1.4" />
+        <equals arg1="${jdk.version}" arg2="1.5" /></or></not>
+    </condition>
+    <fail if="property.invalid" message="The property ${property.invalid} was invalid." />
+  </target>
+
+  <!-- There are only root target directories created here, the executive
+       tasks create the eventual subdirectories themselves. -->
+  <target name="prepare" depends="check" description="Creates working directories.">
+    <mkdir dir="${bin.dir}" />
+    <mkdir dir="${lib.dir}" />
+    <mkdir dir="${doc.dir}" />
+    <mkdir dir="${tmp.dir}" />
+  </target>
+
+  <!-- The Java source files are compiled into the binary class files
+       by this task for both productive and testing classes. -->
+  <target name="compile" depends="prepare" description="Compiles the source code.">
+    <javac srcdir="${src.dir}" debug="${debug}" optimize="${optimize}"
+     classpath="${classpath}" deprecation="${deprecation}" destdir="${bin.dir}"
+     fork="${javac.fork}" compiler="${javac.compiler}" executable="${javac.executable}"
+     source="${javac.source}">
+      <include name="**/*.java" />
+    </javac>
+    <javac srcdir="${tst.dir}" debug="${debug}" optimize="${optimize}"
+     classpath="${classpath}" deprecation="${deprecation}" destdir="${bin.dir}"
+     fork="${javac.fork}" compiler="${javac.compiler}" executable="${javac.executable}"
+     source="${javac.source}">
+      <!--compilerarg value="-Xlint:unchecked" /-->
+      <include name="**/*Test*.java" />
+    </javac>
+  </target>
+
+  <!-- The Java archive file is created by this task for the productive
+       classes only with the explicitely configured manifest. -->
+  <target name="package" depends="compile" description="Packs the compiled classes.">
+    <property name="src.name" value="${ant.project.name}-${version}${runtime.suffix}.jar" />
+    <jar jarfile="${lib.dir}/${src.name}">
+      <fileset dir="${bin.dir}" includes="**/*.class" excludes="**/*Test*.class" />
+      <manifest>
+        <section name="prantl/ant/eclipse">
+	        <attribute name="Title" value="Ant-Eclipse - task generating project files for Eclipse" />
+	        <attribute name="Comment" value="This task generates files .classpath and .project for the Eclipse IDE using the settings from the Ant script." />
+	        <attribute name="Product" value="Ant-Eclipse" />
+          <attribute name="Version" value="${version}" />
+          <attribute name="Date" value="${TODAY}" />
+	        <attribute name="Vendor" value="Ferdinand Prantl &lt;prantl@users.sourceforge.net&gt;" />
+	        <attribute name="Copyright" value="(C) 2005-2006 Ferdinand Prantl" />
+	        <attribute name="URL" value="http://ant-eclipse.sourceforge.net" />
+        </section>
+      </manifest>
+    </jar>
+  </target>
+
+  <!-- The Java source files with the produced Java archive file are analyzed,
+       source code style and source code metrics reports are generated. -->
+  <target name="analyze" depends="package" description="Computes design metrics of the package.">
+    <mkdir dir="${doc.dir}/${src.dir}/style" />
+    <jcsc destdir="${doc.dir}/${src.dir}/style" violationssorter="rj.tools.jcsc.sorter.SeveritySorter"
+     copyassociatedfiles="true" jcschome="${jcsc.home}">
+      <fileset dir="${src.dir}" includes="**/*.java" />
+      <fileset dir="${tst.dir}" includes="**/*.java" />
+    </jcsc>
+    <jdepend format="xml" outputfile="${tmp.dir}/metrics.xml">
+      <exclude name="java.*" />
+      <exclude name="javax.*" />
+      <classespath>
+        <pathelement location="${bin.dir}" />
+      </classespath>
+    </jdepend>
+    <style in="${tmp.dir}/metrics.xml" out="${doc.dir}/${src.dir}/metrics/index.html"
+    style="${ant.home}/etc/jdepend.xsl" />
+  </target>
+
+  <!-- The documentation for this build file and the Java source code
+       documentation is generated by this task, for the productive classes
+       and for the testing ones, everything in HTML. -->
+  <target name="document" depends="prepare" description="Generates the documentation.">
+    <antdoc destination="${doc.dir}/build" buildfile="${ant.file}"
+    css="antdoc.css"/>
+    <javadoc access="protected" author="true" classpath="${classpath}"
+     destdir="${doc.dir}/${src.dir}" doctitle="Ant-Eclipse" windowtitle="Ant-Eclipse"
+     nodeprecated="false" nodeprecatedlist="false" nohelp="false" noindex="false"
+     nonavbar="false" notree="false" splitindex="false" use="true"
+     packagenames="prantl.ant.eclipse"
+     sourcepath="${src.dir}" version="true" charset="utf-8"
+     docencoding="utf-8" linksource="yes" breakiterator="yes"
+     source="${javadoc.source}" overview="${src.dir}/overview.html" />
+    <javadoc access="protected" author="true" classpath="${classpath}"
+     destdir="${doc.dir}/${tst.dir}" doctitle="Ant-Eclipse Tests" windowtitle="Ant-Eclipse Tests"
+     nodeprecated="false" nodeprecatedlist="false" nohelp="false" noindex="false"
+     nonavbar="false" notree="false" splitindex="false" use="true"
+     packagenames="prantl.ant.eclipse"
+     sourcepath="${tst.dir}" version="true" charset="utf-8"
+     docencoding="utf-8" linksource="yes" breakiterator="yes"
+     source="${javadoc.source}" overview="${tst.dir}/overview.html" />
+  </target>
+
+  <!-- Instrumented unit tests are run by this tasks and reports with the test
+       results and test coverage are generated, everything in XML and HTML. -->
+  <target name="test" depends="compile" description="Tests the compiled classes.">
+<echo message="${classpath}" />
+    <antcall target="instrument" />
+    <junit printsummary="true" fork="true" haltonfailure="false"
+      failureproperty="test.failed" dir="${tst.dir}" timeout="60000" jvm="${java.jvm}">
+      <sysproperty key="net.sourceforge.cobertura.datafile" file="${basedir}/cobertura.ser" />
+      <classpath>
+        <pathelement location="${tmp.dir}" />
+        <pathelement path="${classpath}" />
+      </classpath>
+      <formatter type="xml" />
+      <batchtest todir="${tmp.dir}">
+        <fileset dir="${tst.dir}" includes="**/*Test.java" />
+      </batchtest>
+    </junit>
+    <antcall target="report" />
+    <fail if="test.failed" message="Tests failed, report has beed generated." />
+  </target>
+
+  <!-- Modifies the bytecode of the generated binary class files to allow
+       code coverage reporting. -->
+  <target name="instrument" depends="compile" if="instrument"
+   description="instruments the compiled classes for testing.">
+    <cobertura-instrument todir="${tmp.dir}">
+      <fileset dir="${bin.dir}">
+        <include name="**/*.class" />
+        <exclude name="**/*Test*.class" />
+      </fileset>
+    </cobertura-instrument>
+  </target>
+
+  <!-- Generates reports with the test results and test coverage in XML
+       and HTML. -->
+  <target name="report" depends="prepare" description="Generates the test reports.">
+    <copy file="${tst.dir}/result.html" overwrite="true"
+      tofile="${doc.dir}/${tst.dir}/result/index.html"/>
+    <copy file="${tst.dir}/coverage.html" overwrite="true"
+      tofile="${doc.dir}/${tst.dir}/coverage/index.html"/>
+    <junitreport todir="${tmp.dir}">
+      <fileset dir="${tmp.dir}" includes="TEST-*.xml" excludes="TESTS-TestSuites.xml" />
+      <report format="frames" todir="${doc.dir}/${tst.dir}/result${target.suffix}" />
+    </junitreport>
+    <antcall target="report-instrumented" />
+     <!--nounit startDirectory="${bin.dir}" outputDirectory="${tmp.dir}" />
+    <style basedir="${tmp.dir}" destdir="${doc.dir}/${tst.dir}/coverage/${jdk.version}/${target}" includes="project.xml"
+      style="${ixos.srcdir}/pkg/LN_SHARED/read_only/no-unit.xsl"/-->
+  </target>
+
+  <!-- Generates reports with the test coverage in XML and HTML. -->
+  <target name="report-instrumented" depends="prepare" if="instrument"
+  description="Generates the coverage reports.">
+    <cobertura-report datafile="${basedir}/cobertura.ser" format="xml" destdir="${tmp.dir}" srcdir="${src.dir}" />
+    <cobertura-report datafile="${basedir}/cobertura.ser" format="html" destdir="${doc.dir}/${tst.dir}/coverage${target.suffix}" srcdir="${src.dir}" />
+  </target>
+
+  <!-- Packs sources, documentation and built binaries into separate archives
+       with versioned names. -->
+  <target name="distribute" depends="analyze,document" description="Compresses distribution archives.">
+    <property name="archive.base" value="${ant.project.name}-${version}" />
+    <tar destfile="${archive.base}.src.tar" basedir="."
+     includes="src/**,tst/**,manual/**.settings/*,.classpath,.project,setenv.cmd,setenv.sh,INSTALL,LICENSE,NEWS,NOTICE,README,TODO,antdoc.css,*.xml,*.xsl" />
+    <bzip2 destfile="${archive.base}.src.tar.bz2" src="${archive.base}.src.tar" />
+    <delete file="${archive.base}.src.tar" />
+    <tar destfile="${archive.base}.bin.tar" basedir="." 
+     includes="doc/**,lib/**,manual/**,INSTALL,LICENSE,NEWS,NOTICE,README,TODO" />
+    <bzip2 destfile="${archive.base}.bin.tar.bz2" src="${archive.base}.bin.tar" />
+    <delete file="${archive.base}.bin.tar" />
+  </target>
+
+  <!-- Backs up the current source code base into an archive
+       with a timestamped name. -->
+  <target name="backup" description="Compresses sources with the current datestamp.">
+    <property name="archive.base" value="${ant.project.name}-${version}-${DSTAMP}" />
+    <zip destfile="${archive.base}.zip" basedir="."
+     includes="src/**,tst/**,manual/**,.settings/*,.classpath,.project,setenv.cmd,setenv.sh,INSTALL,LICENSE,NEWS,NOTICE,README,TODO,antdoc.css,*.xml,*.xsl" />
+  </target>
+
+  <!-- Runs all phases of the production skipping the unnecessary ones if
+       their results are already up-to-date, for every version of JVM. -->
+  <target name="produce" description="Produces deployment packages.">
+    <antcall target="distclean" />
+    <!--ant target="test" dir="." inheritall="false">
+      <property name="jdk.version" value="1.2" />
+    </ant-->
+    <ant target="package" dir="." inheritall="false">
+      <property name="jdk.version" value="1.2" />
+    </ant>
+    <!--antcall target="clean" />
+    <ant target="test" dir="." inheritall="false">
+      <property name="jdk.version" value="1.3" />
+    </ant>
+    <ant target="package" dir="." inheritall="false">
+      <property name="jdk.version" value="1.3" />
+    </ant>
+    <antcall target="clean" />
+    <ant target="test" dir="." inheritall="false">
+      <property name="jdk.version" value="1.4" />
+    </ant>
+    <ant target="package" dir="." inheritall="false">
+      <property name="jdk.version" value="1.4" />
+    </ant>
+    <antcall target="clean" />
+    <ant target="test" dir="." inheritall="false">
+      <property name="jdk.version" value="1.5" />
+    </ant>
+    <ant target="package" dir="." inheritall="false">
+      <property name="jdk.version" value="1.5" />
+    </ant-->
+    <antcall target="distribute" />
+    <antcall target="distclean" />
+  </target>
+
+  <!-- Deletes the temporary build files, not the distributed target Java
+       archive files and the generated documentation and reports. -->
+  <target name="clean" depends="check" description="Cleans the compiled classes and temporary files.">
+    <delete dir="${bin.dir}" />
+    <delete dir="${tmp.dir}" />
+    <delete file="${basedir}/cobertura.ser" />
+  </target>
+
+  <!-- Deletes everything produced from sources during the build. -->
+  <target name="distclean" depends="clean" description="Cleans the packed libraries and the generated documentation.">
+    <delete dir="${lib.dir}" />
+    <delete dir="${doc.dir}" />
+  </target>
+
+</project>

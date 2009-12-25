@@ -1,0 +1,66 @@
+Changes from Ant-Eclipse 0.3 to Ant-Eclipse 1.0
+===============================================
+
+~ Duplicated dependencies on Java libraries are referred only once in
+  a generated project. The last occurence "wins". It allows a direct usage
+  of references to class paths without listing the libraries one by one
+  only because some of them have a source code attached. Source code of a
+  library is not a part of class path elements but it is necessary to
+  generate a dependency for Eclipse with sources and javadoc.
++ Javadoc can be attached to a library dependency (source has been already
+  available).
++ A new attribute "updatealways" of the alement "eclipse" forces regeneration
+  of the projects files even if the build script has not been changed. It
+  allows updating if the system environment has been changed which can cause
+  different paths to be used in generated files.
++ The attribute "compilercompliance" in the element "jdtcore" allows "6.0"
+  for the Mustang sources.
+
+Changes from Ant-Eclipse 0.2 to Ant-Eclipse 0.3
+===============================================
+
++ Support of AJDT has been added in addition to the JDT support.
+
+Changes from Ant-Eclipse 0.1 to Ant-Eclipse 0.2
+===============================================
+
+Changes that could break older environments:
+--------------------------------------------
+
+~ Semantics of <settings> has changed to be more general. The attribute
+  "version" has been moved into every child element representing a single
+  file with properties. The attribute "encoding" has been moved into
+  <resources> where it belongs logically.
+
+Other changes:
+--------------
+
+~ More property files in the directory ".settings" are supported as elements
+  under the element <settings> making <settings> only a container of
+  preferences.
++ preferences are described either with the low-level <preferences> or
+  convenient high-level descriptions:
+   <resources> for org.eclipse.core.resources.pref
+   <runtime> for org.eclipse.core.runtime.pref
+   <jdkcore> for org.eclipse.jdk.core.pref
+   <jdkui> for org.eclipse.jdk.ui.pref
+
+Fixed bugs:
+-----------
+
+(none)
+
+Features in Ant-Eclipse 0.1
+===========================
+
++ task <eclipse> encapsulating all files Eclipse needs as a project
+  configuration.
++ <settings> under <eclipse> configuring the file
+  .settings/org.eclipse.core.resources.pref
+  with attributes "version" and "encoding"
++ <project> under <eclipse> configuring the file .project
+  with the single attribute "name"
++ <classpath> under <eclipse> configuring the file .classpath with elements
+  <container>, <source>, <library>, <variable> and <output> corresponding
+  with the kinds of elements <classpathentry> under <classpath>: "con", "src",
+  "lib", "var", "output"

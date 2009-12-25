@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+  <classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER" />
+  <classpathentry kind="src" path="java_src:test" />
+  <classpathentry kind="var" path="ASPECTJRT_LIB" />
+  <classpathentry kind="lib" path="a" />
+  <classpathentry kind="lib" path="b" />
+  <classpathentry kind="output" path="" />
+</classpath>

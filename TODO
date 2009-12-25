@@ -1,0 +1,4 @@
++ complete existing convenience elements in <settings> and create the others
+  for the rest of project settings available in Eclipse
++ support more Eclipse versions
++ generate Eclipse jar-descriptions for jar tasks

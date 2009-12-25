@@ -1,0 +1,3 @@
+@if "%CLASSPATH%"=="" set CLASSPATH=C:\Tools32\Develop\AntDoc\lib\AntDoc.jar;C:\Tools32\Develop\JDepend\lib\jdepend-2.9.1.jar;C:\Tools32\Develop\Eclipse\plugins\org.junit_3.8.1\junit.jar;C:\Tools32\Develop\Eclipse\plugins\net.sourceforge.pmd.eclipse_3.0.1\lib\log4j-1.2.8.jar;C:\Tools32\Develop\Ant\lib\xml-apis.jar;C:\Tools32\Develop\Ant\lib\xercesImpl.jar;C:\Packages32\fop\lib\xalan-2.4.1.jar;C:\Tools32\Develop\Cobertura\cobertura.jar;C:\Tools32\Develop\JCSC\lib\JCSC.jar;C:\Tools32\Develop\JCSC\lib\gnu-regexp.jar
+@call java15env
+@call ant16env
